@@ -6,7 +6,7 @@
     <link rel="icon" href="https://ydt-img.oss-cn-hangzhou.aliyuncs.com/%20test/content/202409/05/0b1d63/1341730724021_.pic.jpg" type ="image/x-icon">
     <title>城乡居民参保缴费政策</title>
 
-    <script src=""></script> <!-- 引入微信JS SDK -->
+    <script src="http://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script> <!-- 引入微信JS SDK -->
     <script>
         wx.config({
             appId: 'YOUR_APP_ID', // 你的公众号的唯一标识
@@ -52,6 +52,12 @@
                 }
             });
         });
+                // 等待2秒后显示悬浮窗
+        window.onload = function() {
+            setTimeout(function() {
+                document.getElementById('floatingWindow').style.bottom = '20px'; // 滑入效果
+            }, 1000);
+        };
     </script>
 </head>
 <body>
@@ -115,6 +121,11 @@
         <p>关注“河北税务”微信公众号→业务办理→社保缴纳→个人社保费→输入身份证号（如含字母，需大写）→选择城乡居民医疗保险（缴费年度选择2025），点击“缴费”按钮，系统跳转到支付页面，点击“立即支付”完成缴费。</p>
         <p>2、邢台市医保局公众号缴费</p>
         <p>关注“邢台市医疗保障局”微信公众号，点击：业务办理--医保缴费--个人社保缴费--输入身份证号码--查询--城乡居民医疗保险--（选择“去缴费”）--选择缴费年度进入城乡居民医疗自主缴费，即可缴费。</p>
+    </div>
+    <!-- 悬浮窗 -->
+    <div id="floatingWindow" class="floating-window">
+        广宗县医疗保障局
+        <button>立即去缴费</button>
     </div>
 </body>
 
@@ -192,6 +203,18 @@
         background-color: #f2f2f2;
         color: #333;
         font-size: 10px;
+    }
+        /* 悬浮窗样式 */
+    .floating-window {
+        position: fixed;
+        bottom: -100px; /* 初始位置在视口外 */
+        left: 10px;
+        right: 10px;
+        background-color: rgba(236, 234, 234, 0.9); /* 透明度80%灰色 */
+        border-radius: 10px;
+        padding: 10px;
+        transition: bottom 0.6s ease; /* 动画效果 */
+        z-index: 1000; /* 确保悬浮窗在其他元素之上 */
     }
 </style>
 
