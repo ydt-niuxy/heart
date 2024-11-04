@@ -1,225 +1,197 @@
-<html>
+<!DOCTYPE html>
+<html lang="zh">
 <head>
-    <meta charset="utf-8">
-    <title>loveHeart</title>
-    <link rel="shortcut icon" href="http://zhouql.vip/images/心.png" type="image/x-icon">
-    <style>
-        html,
-        body {
-            height: 100%;
-            padding: 0;
-            margin: 0;
-            background: #000;
-        }
-        canvas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城乡居民参保缴费政策</title>
+
+    <script src=""></script> <!-- 引入微信JS SDK -->
+    <script>
+        wx.config({
+            appId: 'YOUR_APP_ID', // 你的公众号的唯一标识
+            timestamp: 'YOUR_TIMESTAMP', // 生成签名的时间戳
+            nonceStr: 'YOUR_NONCESTR', // 生成签名的随机串
+            signature: 'YOUR_SIGNATURE', // 签名
+            jsApiList: ['onMenuShareTimeline', 'onMenuShareAppMessage'] // 需要使用的JS接口
+        });
+
+        wx.ready(function () {
+            const info = {}; // 这里可以填充额外的自定义信息
+            const shareInfo = Object.assign({
+                title: '一兜',
+                desc: '生活社区',
+                link: window.location.href,
+                imgUrl: '', // 在这里添加分享的图标链接
+            }, info);
+
+            // 分享到朋友圈
+            wx.onMenuShareTimeline({
+                title: shareInfo.title,
+                link: shareInfo.link,
+                imgUrl: shareInfo.imgUrl,
+                success: function () {
+                    // 用户确认分享后执行的回调函数
+                },
+                cancel: function () {
+                    // 用户取消分享后执行的回调函数
+                }
+            });
+
+            // 分享给朋友
+            wx.onMenuShareAppMessage({
+                title: shareInfo.title,
+                desc: shareInfo.desc,
+                link: shareInfo.link,
+                imgUrl: shareInfo.imgUrl,
+                success: function () {
+                    // 用户确认分享后执行的回调函数
+                },
+                cancel: function () {
+                    // 用户取消分享后执行的回调函数
+                }
+            });
+        });
+    </script>
 </head>
 <body>
-    <canvas id="pinkboard"></canvas>
-    <script>
-        var settings = {
-            particles: {
-                length: 500, 
-                duration: 2, 
-                velocity: 100, 
-                effect: -0.75, 
-                size: 32, 
-            },
-        };
-        (function () { var b = 0; var c = ["ms", "moz", "webkit", "o"]; for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) { window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"]; window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"] } if (!window.requestAnimationFrame) { window.requestAnimationFrame = function (h, e) { var d = new Date().getTime(); var f = Math.max(0, 16 - (d - b)); var g = window.setTimeout(function () { h(d + f) }, f); b = d + f; return g } } if (!window.cancelAnimationFrame) { window.cancelAnimationFrame = function (d) { clearTimeout(d) } } }());
-
-        var Point = (function () {
-            function Point(x, y) {
-                this.x = (typeof x !== 'undefined') ? x : 0;
-                this.y = (typeof y !== 'undefined') ? y : 0;
-            }
-            Point.prototype.clone = function () {
-                return new Point(this.x, this.y);
-            };
-            Point.prototype.length = function (length) {
-                if (typeof length == 'undefined')
-                    return Math.sqrt(this.x * this.x + this.y * this.y);
-                this.normalize();
-                this.x *= length;
-                this.y *= length;
-                return this;
-            };
-            Point.prototype.normalize = function () {
-                var length = this.length();
-                this.x /= length;
-                this.y /= length;
-                return this;
-            };
-            return Point;
-        })();
-        var Particle = (function () {
-            function Particle() {
-                this.position = new Point();
-                this.velocity = new Point();
-                this.acceleration = new Point();
-                this.age = 0;
-            }
-            Particle.prototype.initialize = function (x, y, dx, dy) {
-                this.position.x = x;
-                this.position.y = y;
-                this.velocity.x = dx;
-                this.velocity.y = dy;
-                this.acceleration.x = dx * settings.particles.effect;
-                this.acceleration.y = dy * settings.particles.effect;
-                this.age = 0;
-            };
-            Particle.prototype.update = function (deltaTime) {
-                this.position.x += this.velocity.x * deltaTime;
-                this.position.y += this.velocity.y * deltaTime;
-                this.velocity.x += this.acceleration.x * deltaTime;
-                this.velocity.y += this.acceleration.y * deltaTime;
-                this.age += deltaTime;
-            };
-            Particle.prototype.draw = function (context, image) {
-                function ease(t) {
-                    return (--t) * t * t + 1;
-                }
-                var size = image.width * ease(this.age / settings.particles.duration);
-                context.globalAlpha = 1 - this.age / settings.particles.duration;
-                context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
-            };
-            return Particle;
-        })();
-        var ParticlePool = (function () {
-            var particles,
-                firstActive = 0,
-                firstFree = 0,
-                duration = settings.particles.duration;
-            function ParticlePool(length) {
-                // create and populate particle pool
-                particles = new Array(length);
-                for (var i = 0; i < particles.length; i++)
-                    particles[i] = new Particle();
-            }
-            ParticlePool.prototype.add = function (x, y, dx, dy) {
-                particles[firstFree].initialize(x, y, dx, dy);
-                // handle circular queue
-                firstFree++;
-                if (firstFree == particles.length) firstFree = 0;
-                if (firstActive == firstFree) firstActive++;
-                if (firstActive == particles.length) firstActive = 0;
-            };
-            ParticlePool.prototype.update = function (deltaTime) {
-                var i;
-                // update active particles
-                if (firstActive < firstFree) {
-                    for (i = firstActive; i < firstFree; i++)
-                        particles[i].update(deltaTime);
-                }
-                if (firstFree < firstActive) {
-                    for (i = firstActive; i < particles.length; i++)
-                        particles[i].update(deltaTime);
-                    for (i = 0; i < firstFree; i++)
-                        particles[i].update(deltaTime);
-                }
-                // remove inactive particles
-                while (particles[firstActive].age >= duration && firstActive != firstFree) {
-                    firstActive++;
-                    if (firstActive == particles.length) firstActive = 0;
-                }
-            };
-            ParticlePool.prototype.draw = function (context, image) {
-                // draw active particles
-                if (firstActive < firstFree) {
-                    for (i = firstActive; i < firstFree; i++)
-                        particles[i].draw(context, image);
-                }
-                if (firstFree < firstActive) {
-                    for (i = firstActive; i < particles.length; i++)
-                        particles[i].draw(context, image);
-                    for (i = 0; i < firstFree; i++)
-                        particles[i].draw(context, image);
-                }
-            };
-            return ParticlePool;
-        })();
-        (function (canvas) {
-            var context = canvas.getContext('2d'),
-                particles = new ParticlePool(settings.particles.length),
-                particleRate = settings.particles.length / settings.particles.duration, // particles/sec
-                time;
-            // get point on heart with -PI <= t <= PI
-            function pointOnHeart(t) {
-                return new Point(
-                    160 * Math.pow(Math.sin(t), 3),
-                    130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
-                );
-            }
-            // creating the particle image using a dummy canvas
-            var image = (function () {
-                var canvas = document.createElement('canvas'),
-                    context = canvas.getContext('2d');
-                canvas.width = settings.particles.size;
-                canvas.height = settings.particles.size;
-                // helper function to create the path
-                function to(t) {
-                    var point = pointOnHeart(t);
-                    point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
-                    point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
-                    return point;
-                }
-                // create the path
-                context.beginPath();
-                var t = -Math.PI;
-                var point = to(t);
-                context.moveTo(point.x, point.y);
-                while (t < Math.PI) {
-                    t += 0.01; // baby steps!
-                    point = to(t);
-                    context.lineTo(point.x, point.y);
-                }
-                context.closePath();
-                // create the fill
-                context.fillStyle = '#ea80b0';
-                context.fill();
-                // create the image
-                var image = new Image();
-                image.src = canvas.toDataURL();
-                return image;
-            })();
-            // render that thing!
-            function render() {
-                // next animation frame
-                requestAnimationFrame(render);
-                // update time
-                var newTime = new Date().getTime() / 1000,
-                    deltaTime = newTime - (time || newTime);
-                time = newTime;
-                // clear canvas
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                // create new particles
-                var amount = particleRate * deltaTime;
-                for (var i = 0; i < amount; i++) {
-                    var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
-                    var dir = pos.clone().length(settings.particles.velocity);
-                    particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
-                }
-                // update and draw particles
-                particles.update(deltaTime);
-                particles.draw(context, image);
-            }
-            // handle (re-)sizing of the canvas
-            function onResize() {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-            }
-            window.onresize = onResize;
-            // delay rendering bootstrap
-            setTimeout(function () {
-                onResize();
-                render();
-            }, 10);
-        })(document.getElementById('pinkboard'));
-        </script>
+    <div class="container">
+        <div class="title">广宗县医疗保障局</div>
+        <h1>2025年度城乡居民<br />参保缴费政策</h1>
+        <div class="new_label">(一) 参保范围</div>
+        <p>1、除参加城镇职工医疗保险以外的其他所有城乡居民，均纳入城乡居民医保参保登记覆盖范围。</p>
+        <p>2、外来经商和务工人员及其未成年子女在我县居住且未在原籍参加基本医疗保险的人员。</p>
+        <p>3、2025年出生的新生儿在90天内参保登记并缴纳居民医保费的，自出生之日起享受待遇；我县户籍的军队退役人员可参加居民医保，因服役错过集中缴费期的，应在服役结束之日起90天内持有效证明到户籍地医疗保障经办机构办理参保登记并缴纳居民医保费，自缴费到账之日起享受待遇。</p>
+        <div class="new_label">(二) 征缴期限与标准</div>
+        <p>集中征缴时间：2024年9月4日至12月28日（9-11月份为每月1-25日，12月份为1-28日）</p>
+        <p>集中征缴标准：</p>
+        <p>1、2025年城乡居民基本医疗保险和长期护理保险个人缴费标准为每人405元（其中城乡居民基本医疗保险个人缴费标准为400元/人，长期护理保险个人缴费标准为5元/人），由税务部门统一征收。</p>
+        <p>2、特殊困难群体长期护理保险5元由政府资助，各类人员基本医保缴费标准如下：</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>人员类别</th>
+                    <th>资助标准</th>
+                    <th>资助金额（元）</th>
+                    <th>个人缴纳（元）</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>特困人员</td>
+                    <td>100%</td>
+                    <td>400</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>脱贫人口低保对象</td>
+                    <td>90%</td>
+                    <td>360</td>
+                    <td>40</td>
+                </tr>
+                <tr>
+                    <td>纳入乡村振兴部门认定易返贫致贫人员</td>
+                    <td>90%</td>
+                    <td>360</td>
+                    <td>40</td>
+                </tr>
+                <tr>
+                    <td>其他脱贫人口</td>
+                    <td>60%</td>
+                    <td>240</td>
+                    <td>160</td>
+                </tr>
+                <tr>
+                    <td>脱贫户之外低保对象（农村低保、城镇低保）</td>
+                    <td>60%</td>
+                    <td>240</td>
+                    <td>160</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="size_box"></div>
+        <div class="new_label">（三）缴费渠道</div>
+        <p>1、河北税务公众号缴费</p>
+        <p>关注“河北税务”微信公众号→业务办理→社保缴纳→个人社保费→输入身份证号（如含字母，需大写）→选择城乡居民医疗保险（缴费年度选择2025），点击“缴费”按钮，系统跳转到支付页面，点击“立即支付”完成缴费。</p>
+        <p>2、邢台市医保局公众号缴费</p>
+        <p>关注“邢台市医疗保障局”微信公众号，点击：业务办理--医保缴费--个人社保缴费--输入身份证号码--查询--城乡居民医疗保险--（选择“去缴费”）--选择缴费年度进入城乡居民医疗自主缴费，即可缴费。</p>
+    </div>
 </body>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #1f98f4;
+        margin: 0;
+        padding: 20px;
+    }
+    .title {
+        background: linear-gradient(#1f98f4, rgb(40, 40, 189));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: 30px;
+        text-align: center;
+        font-weight: 500;
+
+    }
+    .size_box {
+        height: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #004caa;
+        font-size: 22px;
+        font-family: "Microsoft YaHei", sans-serif;;
+        font-weight: 400;
+    }
+    .new_label {
+        background: linear-gradient(70deg, #1f98f4, pink);
+        font-size: 20px;
+        text-align: center;
+        border-radius: 10px 100px / 120px;
+        font-weight: 500;
+        color: white;
+        padding: 5px 4px;
+    }
+    .container {
+        max-width: 800px;
+        background-color: #fbfdff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin: auto;
+    }
+
+    h2 {
+        color: #555;
+    }
+    p {
+        line-height: 1.6;
+        color: #666;
+    }
+    ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    li {
+        margin: 5px 0;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+        font-size: 10px;
+    }
+    th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-size: 10px;
+    }
+</style>
 
 </html>
