@@ -8,52 +8,95 @@
 
     <script src="http://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script> <!-- 引入微信JS SDK -->
     <script>
-        wx.config({
-            appId: 'YOUR_APP_ID', // 你的公众号的唯一标识
-            timestamp: 'YOUR_TIMESTAMP', // 生成签名的时间戳
-            nonceStr: 'YOUR_NONCESTR', // 生成签名的随机串
-            signature: 'YOUR_SIGNATURE', // 签名
-            jsApiList: ['onMenuShareTimeline', 'onMenuShareAppMessage'] // 需要使用的JS接口
-        });
-
-        wx.ready(function () {
-            const info = {}; // 这里可以填充额外的自定义信息
-            const shareInfo = Object.assign({
-                title: '一兜',
-                desc: '生活社区',
-                link: window.location.href,
-                imgUrl: '', // 在这里添加分享的图标链接
-            }, info);
-
-            // 分享到朋友圈
-            wx.onMenuShareTimeline({
-                title: shareInfo.title,
-                link: shareInfo.link,
-                imgUrl: shareInfo.imgUrl,
-                success: function () {
-                    // 用户确认分享后执行的回调函数
-                },
-                cancel: function () {
-                    // 用户取消分享后执行的回调函数
-                }
+                // 使用fetch实现与getWxConfig的功能
+        function getWxConfig() {
+            return new Promise((resolve, reject) => {
+                const url = `https://m.yidoutang.com/apiv3/passport/JSSDKSign?type=2&url=${encodeURIComponent(window.location.href)}`;
+                
+                // 使用fetch进行请求
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.sign) {
+                            resolve(data.sign); // 成功获取签名
+                        } else {
+                            reject(new Error('签名数据为空或格式错误')); // 数据格式问题
+                        }
+                    })
+                    .catch(err => {
+                        reject(err); // 处理网络错误等
+                    });
             });
+        };
+        // 点击按钮跳转到指定网站
+        function redirectToPayment() {
+            window.location.href = "https://zhpt.hebei.chinatax.gov.cn/rlhs.html?type=grsbfNew";
+        }
 
-            // 分享给朋友
-            wx.onMenuShareAppMessage({
-                title: shareInfo.title,
-                desc: shareInfo.desc,
-                link: shareInfo.link,
-                imgUrl: shareInfo.imgUrl,
-                success: function () {
-                    // 用户确认分享后执行的回调函数
-                },
-                cancel: function () {
-                    // 用户取消分享后执行的回调函数
-                }
-            });
-        });
-                // 等待2秒后显示悬浮窗
+
         window.onload = function() {
+            getWxConfig()
+                .then(res => {
+                    const {
+						appId,
+						timestamp,
+						nonceStr,
+						signature,
+					} = res;
+                    const jsApiList = [
+						'onMenuShareTimeline', 'onMenuShareAppMessage'
+					];
+                    wx.config({
+						debug: true,
+						appId,
+						timestamp,
+						nonceStr,
+						signature,
+						jsApiList,
+					});
+
+                    wx.ready(function () {
+                        const info = {}; // 这里可以填充额外的自定义信息
+                        const shareInfo = Object.assign({
+                            title: '2025年度城乡居民医保开始缴费啦',
+                            desc: '广宗县医疗保障局',
+                            link: window.location.href,
+                            imgUrl: 'https://ydt-img.oss-cn-hangzhou.aliyuncs.com/%20test/content/202409/05/0b1d63/1341730724021_.pic.jpg', // 在这里添加分享的图标链接
+                        }, info);
+
+                        // 分享到朋友圈
+                        wx.onMenuShareTimeline({
+                            title: shareInfo.title,
+                            link: shareInfo.link,
+                            imgUrl: shareInfo.imgUrl,
+                            success: function () {
+                                // 用户确认分享后执行的回调函数
+                            },
+                            cancel: function () {
+                                // 用户取消分享后执行的回调函数
+                            }
+                        });
+
+                        // 分享给朋友
+                        wx.onMenuShareAppMessage({
+                            title: shareInfo.title,
+                            desc: shareInfo.desc,
+                            link: shareInfo.link,
+                            imgUrl: shareInfo.imgUrl,
+                            success: function () {
+                                // 用户确认分享后执行的回调函数
+                            },
+                            cancel: function () {
+                                // 用户取消分享后执行的回调函数
+                            }
+                        });
+                    });
+                    // 可以在这里进一步使用签名进行其他操作
+                })
+                .catch(err => {
+                    console.error('获取签名失败:', err);
+                });
+             // 等待2秒后显示悬浮窗
             setTimeout(function() {
                 document.getElementById('floatingWindow').style.bottom = '20px'; // 滑入效果
             }, 1000);
@@ -61,7 +104,9 @@
     </script>
 </head>
 <body>
+
     <div class="container">
+        <img src="https://ydt-img.oss-cn-hangzhou.aliyuncs.com/%20test/content/202409/05/0b1d63/%E7%94%BB%E6%9D%BF%E5%A4%87%E4%BB%BD%206%20%281%29.jpg" alt="">
         <div class="title">广宗县医疗保障局</div>
         <h1>2025年度城乡居民<br />参保缴费政策</h1>
         <div class="new_label">(一) 参保范围</div>
@@ -121,11 +166,20 @@
         <p>关注“河北税务”微信公众号→业务办理→社保缴纳→个人社保费→输入身份证号（如含字母，需大写）→选择城乡居民医疗保险（缴费年度选择2025），点击“缴费”按钮，系统跳转到支付页面，点击“立即支付”完成缴费。</p>
         <p>2、邢台市医保局公众号缴费</p>
         <p>关注“邢台市医疗保障局”微信公众号，点击：业务办理--医保缴费--个人社保缴费--输入身份证号码--查询--城乡居民医疗保险--（选择“去缴费”）--选择缴费年度进入城乡居民医疗自主缴费，即可缴费。</p>
+        <img src="https://ydt-img.oss-cn-hangzhou.aliyuncs.com/%20test/content/202409/05/0b1d63/doctor-6810750_1280%202.png" alt=""></img>
     </div>
     <!-- 悬浮窗 -->
     <div id="floatingWindow" class="floating-window">
-        广宗县医疗保障局
-        <button>立即去缴费</button>
+        <img src="https://ydt-img.oss-cn-hangzhou.aliyuncs.com/%20test/content/202409/05/0b1d63/1341730724021_.pic.jpg" alt=""></img>
+        <div class="text">
+            <div class="title">
+                广宗县医疗保障局
+            </div>
+            <div class="desc">
+                2025年度城乡居民医保开始缴费啦
+            </div>
+        </div>
+        <button onclick="redirectToPayment()">立即缴费</button>
     </div>
 </body>
 
@@ -172,6 +226,11 @@
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         margin: auto;
+        padding-bottom: 60px;
+        img {
+            width: 100%;
+            height: auto;
+        }
     }
 
     h2 {
@@ -215,6 +274,43 @@
         padding: 10px;
         transition: bottom 0.6s ease; /* 动画效果 */
         z-index: 1000; /* 确保悬浮窗在其他元素之上 */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        img {
+            width: 50px;
+            height: 50px;
+            border-radius: 90%;
+            align-items: center;
+        }
+        .text {
+            .title {
+            /* background: linear-gradient(#1f98f4, rgb(40, 40, 189)); */
+            background:#333;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            font-size: 20px;
+            text-align: left;
+            }
+            .desc {
+                color: #666;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+        }
+        button {
+            background-color: red;
+            color: #fbfdff;
+            border: none;
+            padding: 8px 8px;
+            border-radius: 5px;
+            height: 30px;
+            align-items: center;
+            text-align: center;
+        }
+        
     }
 </style>
 
